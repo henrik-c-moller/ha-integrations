@@ -42,8 +42,20 @@ class AflasAPI:
             "reference": "/selvaflaesning/login.php",
         }
 
-        # Aflas.dk uses 302 redirect on successful login
-        return self.session.post(url, data=payload, allow_redirects=False)
+        headers = {
+            "Referer": f"{self.base}/{self.vaerk}/login",
+            "User-Agent": "HomeAssistant Aflas.dk Integration",
+        }
+
+        response = self.session.post(url, data=payload, headers=headers, allow_redirects=False)
+        _LOGGER.debug(
+            "Aflas.dk login response: status=%s location=%s cookies=%s",
+            response.status_code,
+            response.headers.get("Location"),
+            self.session.cookies.get_dict(),
+        )
+
+        return response
 
     # ---------------------------------------------------------
     # LOGIN VALIDATION (used by config-flow + options-flow)
@@ -99,8 +111,18 @@ class AflasAPI:
     def get_settings(self):
         """Fetch meter settings. May contain multiple meters."""
         url = f"{self.base}/{self.vaerk}/api?tab=forbrugsettings"
-        headers = {"X-Requested-With": "XMLHttpRequest"}
-        return self.session.get(url, headers=headers)
+        headers = {
+            "X-Requested-With": "XMLHttpRequest",
+            "Referer": f"{self.base}/{self.vaerk}/login",
+        }
+        response = self.session.get(url, headers=headers)
+        _LOGGER.debug(
+            "Aflas.dk settings response: status=%s cookies=%s headers=%s",
+            response.status_code,
+            self.session.cookies.get_dict(),
+            response.request.headers,
+        )
+        return response
 
     # ---------------------------------------------------------
     # FETCH CURRENT USAGE FOR ONE METER

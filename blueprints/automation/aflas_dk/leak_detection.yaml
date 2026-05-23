@@ -1,0 +1,81 @@
+blueprint:
+  name: Aflas.dk – Leak Detection
+  description: >
+    Detects abnormal or continuous water flow using Aflas.dk flow sensors.
+    Triggers when flow exceeds a threshold for a sustained duration.
+  domain: automation
+  input:
+    flow_sensor:
+      name: Flow Sensor
+      description: Select the Aflas.dk Water Flow sensor for the meter.
+      selector:
+        entity:
+          domain: sensor
+          device_class: water
+          multiple: false
+    flow_threshold:
+      name: Flow Threshold (m³/h)
+      description: Flow above this value is considered abnormal.
+      default: 0.05
+      selector:
+        number:
+          min: 0.01
+          max: 1.0
+          step: 0.01
+          mode: slider
+    duration:
+      name: Duration (minutes)
+      description: Flow must stay above threshold for this long.
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 60
+          step: 1
+    notify_device:
+      name: Notify Device
+      description: Device to send the leak alert notification to.
+      selector:
+        device:
+          integration: mobile_app
+    cooldown:
+      name: Cooldown (minutes)
+      description: Minimum time between leak alerts.
+      default: 60
+      selector:
+        number:
+          min: 5
+          max: 720
+          step: 5
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: numeric_state
+    entity_id: !input flow_sensor
+    above: !input flow_threshold
+    for:
+      minutes: !input duration
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ (now() - (state_attr(this.entity_id, 'last_triggered') or
+              now() - timedelta(hours=24))).total_seconds() >
+              (60 * (cooldown | int)) }}
+        sequence:
+          - device_id: !input notify_device
+            domain: mobile_app
+            type: notify
+            message: >
+              🚨 *Possible Water Leak Detected!*
+              Flow has been above {{ flow_threshold }} m³/h for more than
+              {{ duration }} minutes.
+            title: "Aflas.dk Leak Alert"
+    default: []
+

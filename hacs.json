@@ -1,0 +1,8 @@
+{
+  "name": "Henrik's Custom Integrations",
+  "content_in_root": false,
+  "domains": ["aflas_dk"],
+  "country": [],
+  "homeassistant": "2024.0.0",
+  "render_readme": true
+}

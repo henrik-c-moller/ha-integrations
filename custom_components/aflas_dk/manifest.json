@@ -1,0 +1,11 @@
+{
+  "domain": "aflas_dk",
+  "name": "Aflas.dk Water Meter",
+  "version": "1.0.0",
+  "documentation": "https://github.com/henrik-c-moller/ha-integrations/tree/main/custom_components/aflas_dk/readme.txt",
+  "requirements": ["requests"],
+  "codeowners": ["@henrik-c-moller"],
+  "iot_class": "cloud_polling",
+  "config_flow": true,
+  "diagnostics": true
+}

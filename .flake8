@@ -1,0 +1,13 @@
+[flake8]
+max-line-length = 120
+max-complexity = 20
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    .github,
+    custom_components/aflas_dk/tests
+ignore =
+    E203,
+    W503
+

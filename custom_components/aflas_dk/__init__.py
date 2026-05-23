@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
 DOMAIN = "aflas_dk"
+PLATFORMS = ["sensor"]
 
 from .coordinator import AflasCoordinator
 from .api import AflasAPI

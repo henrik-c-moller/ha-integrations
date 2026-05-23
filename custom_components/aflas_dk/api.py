@@ -114,14 +114,22 @@ class AflasAPI:
         headers = {
             "X-Requested-With": "XMLHttpRequest",
             "Referer": f"{self.base}/{self.vaerk}/login",
+            "User-Agent": "HomeAssistant Aflas.dk Integration",
         }
-        response = self.session.get(url, headers=headers)
+        response = self.session.get(url, headers=headers, allow_redirects=False)
         _LOGGER.debug(
-            "Aflas.dk settings response: status=%s cookies=%s headers=%s",
+            "Aflas.dk settings response: status=%s url=%s cookies=%s headers=%s",
             response.status_code,
+            response.url,
             self.session.cookies.get_dict(),
             response.request.headers,
         )
+
+        if response.status_code == 302:
+            raise Exception(
+                "Aflas.dk settings request was redirected, likely missing login/session cookies"
+            )
+
         return response
 
     # ---------------------------------------------------------
@@ -138,14 +146,32 @@ class AflasAPI:
             f"{self.base}/{self.vaerk}/api?"
             f"tab=forbrugcurrent&maalerNr={self.meter}&date={today}"
         )
-        headers = {"X-Requested-With": "XMLHttpRequest"}
+        headers = {
+            "X-Requested-With": "XMLHttpRequest",
+            "Referer": f"{self.base}/{self.vaerk}/login",
+            "User-Agent": "HomeAssistant Aflas.dk Integration",
+        }
 
-        resp = self.session.get(url, headers=headers)
+        resp = self.session.get(url, headers=headers, allow_redirects=False)
+
+        if resp.status_code == 302:
+            raise Exception(
+                "Aflas.dk usage request was redirected, likely invalid login/session"
+            )
 
         if resp.status_code != 200:
             raise Exception(f"Aflas.dk returned HTTP {resp.status_code}")
 
-        js = resp.json()
+        try:
+            js = resp.json()
+        except ValueError as err:
+            _LOGGER.error(
+                "Aflas.dk usage response was not valid JSON: status=%s url=%s text=%s",
+                resp.status_code,
+                resp.url,
+                resp.text[:500],
+            )
+            raise
 
         if "current" not in js:
             raise Exception("Aflas.dk response missing 'current' field")

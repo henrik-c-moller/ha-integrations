@@ -27,7 +27,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data["vaerknummer"],
     )
     settings_resp = await hass.async_add_executor_job(api.get_settings)
-    js = settings_resp.json()
+    try:
+        js = settings_resp.json()
+    except Exception as err:
+        raw_response = settings_resp.text
+        _LOGGER.warning(
+            "Aflas.dk settings response was not valid JSON: %s",
+            err,
+        )
+        _LOGGER.debug(
+            "Aflas.dk raw settings response: %s",
+            raw_response,
+        )
+        js = {}
+
     meters = js.get("maalerNr", [])
 
     if isinstance(meters, (str, int)):
@@ -43,13 +56,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         meters = list(meters) if hasattr(meters, "__iter__") else []
 
-    _LOGGER.debug("Aflas.dk settings response: %s", js)
-    _LOGGER.debug("Aflas.dk meters found: %s", meters)
-
+    _LOGGER.debug(
+        "Aflas.dk settings status=%s response_json=%s",
+        settings_resp.status_code,
+        js,
+    )
     if not meters:
         _LOGGER.warning(
-            "Aflas.dk setup completed without any meters from settings. Check credentials or the Aflas.dk API response."
+            "Aflas.dk setup could not find any meters. Check credentials or the Aflas.dk API response."
         )
+        _LOGGER.warning(
+            "Aflas.dk raw settings response (status %s): %s",
+            settings_resp.status_code,
+            settings_resp.text,
+        )
+        return False
+
+    for meter in meters:
         coordinator = AflasCoordinator(
             hass,
             entry,

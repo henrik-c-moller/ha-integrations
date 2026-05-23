@@ -144,7 +144,7 @@ class AflasAPI:
 
         url = (
             f"{self.base}/{self.vaerk}/api?"
-            f"tab=forbrugcurrent&maalerNr={self.meter}&date={today}"
+            f"type=data&maalerNr={self.meter}&date={today}&view=daily&compare=false"
         )
         headers = {
             "X-Requested-With": "XMLHttpRequest",

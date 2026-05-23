@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import requests
+import datetime
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,9 +98,11 @@ class AflasAPI:
         if not self.meter:
             raise Exception("Meter number not set for usage request")
 
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+
         url = (
             f"{self.base}/{self.vaerk}/api?"
-            f"tab=forbrugcurrent&maalerNr={self.meter}"
+            f"tab=forbrugcurrent&maalerNr={self.meter}&date={today}"
         )
         headers = {"X-Requested-With": "XMLHttpRequest"}
 

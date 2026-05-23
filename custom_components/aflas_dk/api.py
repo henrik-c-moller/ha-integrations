@@ -143,7 +143,7 @@ class AflasAPI:
         today = datetime.datetime.now().strftime("%Y-%m-%d")
 
         url = (
-            f"{self.base}/{self.vaerk}/api?"
+            f"{self.base}/{self.vaerk}/forbrug?"
             f"type=data&maalerNr={self.meter}&date={today}&view=daily&compare=false"
         )
         headers = {

@@ -61,18 +61,30 @@ class AflasAPI:
             login_resp = self.login()
 
             if login_resp.status_code != 302:
+                _LOGGER.debug(
+                    "Aflas.dk login failed with status %s: %s",
+                    login_resp.status_code,
+                    login_resp.text[:200],
+                )
                 return "invalid_auth"
 
             # Fetch settings to confirm login and meter list
             settings_resp = self.get_settings()
-
-            if settings_resp.status_code != 200:
-                return "invalid_auth"
-
             js = settings_resp.json()
             meters = js.get("maalerNr")
 
-            if not meters or not isinstance(meters, list):
+            if isinstance(meters, (str, int)):
+                meters = [str(meters)]
+            elif meters is None:
+                meters = []
+            elif not isinstance(meters, list):
+                meters = list(meters) if hasattr(meters, "__iter__") else []
+
+            if not meters:
+                _LOGGER.debug(
+                    "Aflas.dk settings did not contain meters: %s",
+                    js,
+                )
                 return "invalid_auth"
 
             return True
